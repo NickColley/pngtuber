@@ -7,14 +7,16 @@
     <title>Document</title>
     <style>
       :root {
+        --tuber-size: 100vh;
         --slider-width: 100%;
         --slider-height: 2.75rem;
         --slider-thumb-size: 2.75rem;
         --slider-thumb-background-color: lightgrey;
         --slider-thumb-background-color-hover: darkgrey;
         --slider-thumb-background-color-active: grey;
-        --slider-border-radius: 5px;
-        --slider-border-width: 2px;
+        --slider-border-color: #0b0c0c;
+        --slider-border-radius: 0.5rem;
+        --slider-border-width: 0.15rem;
       }
       *,
       *::before,
@@ -27,11 +29,11 @@
       }
       html {
         font-family: sans-serif;
+        font-size: 3vh;
       }
       body {
         margin: 0;
         padding: 0;
-        background: #00b140;
       }
       .tuber {
         position: fixed;
@@ -43,14 +45,14 @@
       }
       .tuber,
       [data-frame] {
-        height: 200px;
-        width: 200px;
+        height: var(--tuber-size);
+        width: var(--tuber-size);
       }
       [data-frame] {
         position: absolute;
         top: 0;
         left: 0;
-        animation: noop 3s steps(1, end) infinite;
+        animation: noop 2s steps(1, end) infinite;
       }
       [data-frame="closed"] {
         opacity: 1;
@@ -96,9 +98,8 @@
       }
       .slider {
         position: relative;
-        border: var(--slider-border-width) solid;
+        border: var(--slider-border-width) solid var(--slider-border-color);
         border-radius: var(--slider-border-radius);
-        background: white;
         margin-top: 0.5rem;
         margin-bottom: 2rem;
       }
@@ -122,28 +123,40 @@
         width: var(--slider-width);
       }
       meter {
+        z-index: -1;
         position: absolute;
         top: 0;
         left: 0;
         margin: 0;
         padding: 0;
-
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        background: none; /* Required to get rid of the default background prop. */
       }
 
-      meter::-moz-meter-bar,
-      meter::-webkit-meter-bar {
-        background: none; /* Important to get rid of default background. */
+      meter,
+      meter::-webkit-meter-bar,
+      meter::-webkit-meter-optimum-value,
+      meter::-webkit-meter-suboptimum-value,
+      meter::-webkit-meter-even-less-good-value,
+      meter::-webkit-meter-inner-element {
+        background: none;
+        border-radius: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+      }
+
+      meter {
+        appearance: none;
+        -moz-appearance: meter;
+        -webkit-appearance: meter;
+      }
+
+      meter::-webkit-meter-optimum-value {
+        background: none;
         background-color: forestgreen;
       }
-      meter,
-      meter::-moz-meter-bar,
-      meter::-webkit-meter-bar {
-        height: 100%;
-        width: 100%;
+      meter::-moz-meter-bar {
+        background: none;
+        background-color: forestgreen;
       }
       input[type="range"] {
         -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
@@ -171,7 +184,7 @@
 
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
-        border: var(--slider-border-width) solid;
+        border: var(--slider-border-width) solid var(--slider-border-color);
         height: var(--slider-height);
         width: var(--slider-thumb-size);
         background: var(--slider-thumb-background-color);
@@ -186,7 +199,7 @@
 
       input[type="range"]::-moz-range-thumb {
         -webkit-appearance: none;
-        border: var(--slider-border-width) solid;
+        border: var(--slider-border-width) solid var(--slider-border-color);
         height: var(--slider-thumb-size);
         border-radius: var(--slider-border-radius);
         width: var(--slider-thumb-size);
@@ -201,7 +214,7 @@
       }
       button {
         height: var(--slider-thumb-size);
-        border: var(--slider-border-width) solid;
+        border: var(--slider-border-width) solid var(--slider-border-color);
         font-size: inherit;
         font-family: inherit;
         border-radius: var(--slider-border-radius);
@@ -276,7 +289,7 @@
         };
       }
       const VOLUME_THRESHOLD = 0.05;
-      const DELAY_THRESHOLD = 0.5;
+      const DELAY_THRESHOLD = 0.8;
       const setState = throttle((state) => {
         window.localStorage.setItem("volumeThreshold", state.volumeThreshold);
         window.localStorage.setItem("delayThreshold", state.delayThreshold);
@@ -294,14 +307,15 @@
           window.localStorage.getItem("delayThreshold") || DELAY_THRESHOLD;
       };
       const showControls = () => {
-        controls.removeAttribute('hidden')
-      }
+        controls.removeAttribute("hidden");
+      };
       const hideControls = () => {
-        controls.setAttribute('hidden', true)
-      }
+        controls.setAttribute("hidden", true);
+      };
       reset.onclick = resetState;
       window.onfocus = showControls;
       window.onblur = hideControls;
+      window.onmouseover = showControls;
       async function main() {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
@@ -324,8 +338,7 @@
           const value = Math.sqrt(sumSquares / pcmData.length);
           if (value > volumeThreshold.value) {
             delayMeter.value = 1;
-          }
-          if (delayMeter.value > 0) {
+          } else if (delayMeter.value > 0) {
             delayMeter.value -= 0.02;
           }
           const state =
@@ -342,6 +355,7 @@
       }
       main();
       getInitialState();
+      hideControls();
     </script>
   </body>
 </html>
