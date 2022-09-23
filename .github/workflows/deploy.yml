@@ -23,6 +23,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Set GITHUB_REPOSITORY_NAME variable
+        run: |
+          echo GITHUB_REPOSITORY_NAME=`echo $GITHUB_REPOSITORY | sed "s|$GITHUB_REPOSITORY_OWNER/||g;"` >> $GITHUB_ENV
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Node
@@ -32,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build project
-        run: npm run build
+        run: npm run build -- --public-url="/$GITHUB_REPOSITORY_NAME/"
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
