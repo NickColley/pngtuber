@@ -3,7 +3,11 @@
   "name": "pngtuber-web",
   "version": "0.0.0",
   "scripts": {
-    "start": "python -m SimpleHTTPServer",
+    "start": "parcel app/index.html",
+    "build": "parcel build app/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "parcel": "^2.7.0"
   }
 }
