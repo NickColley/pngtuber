@@ -18,7 +18,7 @@ function throttle(fn, threshhold = 250, scope) {
     }
   };
 }
-const VOLUME_THRESHOLD = 0.05;
+const VOLUME_THRESHOLD = 0.1;
 const DELAY_THRESHOLD = 0.8;
 const setState = throttle((state) => {
   window.localStorage.setItem("volumeThreshold", state.volumeThreshold);
