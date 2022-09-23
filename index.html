@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
+      :root {
+        --slider-width: 100%;
+        --slider-height: 2.75rem;
+        --slider-thumb-size: 2.75rem;
+        --slider-thumb-background-color: lightgrey;
+        --slider-thumb-background-color-hover: darkgrey;
+        --slider-thumb-background-color-active: grey;
+        --slider-border-radius: 5px;
+        --slider-border-width: 2px;
+      }
       *,
       *::before,
       *::after {
@@ -23,13 +33,13 @@
         padding: 0;
         background: #00b140;
       }
-      main {
-        max-width: 500px;
-        margin: 5rem auto;
-      }
       .tuber {
-        position: relative;
-        margin: 0 auto;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
       }
       .tuber,
       [data-frame] {
@@ -77,17 +87,28 @@
           opacity: 0;
         }
       }
+      .controls {
+        z-index: 1;
+        position: fixed;
+        top: 0;
+        left: 0;
+        padding: 1rem;
+      }
       .slider {
-        --slider-width: 20rem;
         position: relative;
-        border: 2px solid;
-        border-radius: 5px;
+        border: var(--slider-border-width) solid;
+        border-radius: var(--slider-border-radius);
+        background: white;
         margin-top: 0.5rem;
         margin-bottom: 2rem;
       }
+      .slider:focus-within {
+        outline: 2px solid;
+        outline-offset: 4px;
+      }
       .slider,
       .slider input {
-        height: 3rem;
+        height: var(--slider-height);
         width: var(--slider-width);
       }
       .slider [type="range"] {
@@ -98,7 +119,7 @@
         right: 0;
         margin: auto;
         padding: 0;
-        width: calc(var(--slider-width) - 10px);
+        width: var(--slider-width);
       }
       meter {
         position: absolute;
@@ -116,7 +137,7 @@
       meter::-moz-meter-bar,
       meter::-webkit-meter-bar {
         background: none; /* Important to get rid of default background. */
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: forestgreen;
       }
       meter,
       meter::-moz-meter-bar,
@@ -124,34 +145,107 @@
         height: 100%;
         width: 100%;
       }
+      input[type="range"] {
+        -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+        width: 100%; /* Specific width is required for Firefox. */
+        background: transparent; /* Otherwise white in Chrome */
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+      }
+
+      input[type="range"]:focus {
+        outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+      }
+
+      input[type="range"]::-ms-track {
+        width: 100%;
+        cursor: pointer;
+
+        /* Hides the slider so custom styles can be added */
+        background: transparent;
+        border-color: transparent;
+        color: transparent;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        border: var(--slider-border-width) solid;
+        height: var(--slider-height);
+        width: var(--slider-thumb-size);
+        background: var(--slider-thumb-background-color);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb:hover {
+        background: var(--slider-thumb-background-color-hover);
+      }
+      input[type="range"]::-webkit-slider-thumb:active {
+        background: var(--slider-thumb-background-color-active);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        -webkit-appearance: none;
+        border: var(--slider-border-width) solid;
+        height: var(--slider-thumb-size);
+        border-radius: var(--slider-border-radius);
+        width: var(--slider-thumb-size);
+        background: var(--slider-thumb-background-color);
+        cursor: pointer;
+      }
+      input[type="range"]::-moz-range-thumb:hover {
+        background: var(--slider-thumb-background-color-hover);
+      }
+      input[type="range"]::-moz-range-thumb:active {
+        background: var(--slider-thumb-background-color-active);
+      }
+      button {
+        height: var(--slider-thumb-size);
+        border: var(--slider-border-width) solid;
+        font-size: inherit;
+        font-family: inherit;
+        border-radius: var(--slider-border-radius);
+        background: var(--slider-thumb-background-color);
+        padding: 0 1rem;
+        cursor: pointer;
+      }
+      button:hover {
+        background: var(--slider-thumb-background-color-hover);
+      }
+      button:active {
+        background: var(--slider-thumb-background-color-active);
+      }
     </style>
   </head>
   <body>
     <main>
-      <h1>PNGTUBER WEB EDITION</h1>
-      <label for="volumeThreshold">Volume Threshold</label>
-      <div class="slider">
-        <meter id="volumeMeter" max="1"></meter>
-        <input
-          type="range"
-          id="volumeThreshold"
-          min="0.005"
-          max="1"
-          value="0.2"
-          step="0.05"
-        />
-      </div>
-      <label for="delayThreshold">Delay Threshold</label>
-      <div class="slider">
-        <meter id="delayMeter" max="1"></meter>
-        <input
-          type="range"
-          id="delayThreshold"
-          min="0.005"
-          max="1"
-          value="0.2"
-          step="0.05"
-        />
+      <div id="controls" class="controls">
+        <h1>PNGTUBER WEB EDITION</h1>
+        <label for="volumeThreshold">Volume Threshold</label>
+        <div class="slider">
+          <meter id="volumeMeter" max="1"></meter>
+          <input
+            type="range"
+            id="volumeThreshold"
+            min="0.005"
+            max="1"
+            value="0.2"
+            step="0.05"
+          />
+        </div>
+        <label for="delayThreshold">Delay Threshold</label>
+        <div class="slider">
+          <meter id="delayMeter" max="1"></meter>
+          <input
+            type="range"
+            id="delayThreshold"
+            min="0.005"
+            max="1"
+            value="0.2"
+            step="0.05"
+          />
+        </div>
+        <button id="reset" type="button">Reset to default</button>
       </div>
       <div class="tuber" id="tuber">
         <img data-frame="closed" src="/assets/closed.png" alt="" />
@@ -181,16 +275,33 @@
           }
         };
       }
+      const VOLUME_THRESHOLD = 0.05;
+      const DELAY_THRESHOLD = 0.5;
       const setState = throttle((state) => {
         window.localStorage.setItem("volumeThreshold", state.volumeThreshold);
         window.localStorage.setItem("delayThreshold", state.delayThreshold);
       }, 1000);
+      const resetState = () => {
+        window.localStorage.removeItem("volumeThreshold");
+        window.localStorage.removeItem("delayThreshold");
+        volumeThreshold.value = VOLUME_THRESHOLD;
+        delayThreshold.value = DELAY_THRESHOLD;
+      };
       const getInitialState = () => {
         volumeThreshold.value =
-          window.localStorage.getItem("volumeThreshold") || 0.005;
+          window.localStorage.getItem("volumeThreshold") || VOLUME_THRESHOLD;
         delayThreshold.value =
-          window.localStorage.getItem("delayThreshold") || 0.5;
+          window.localStorage.getItem("delayThreshold") || DELAY_THRESHOLD;
       };
+      const showControls = () => {
+        controls.removeAttribute('hidden')
+      }
+      const hideControls = () => {
+        controls.setAttribute('hidden', true)
+      }
+      reset.onclick = resetState;
+      window.onfocus = showControls;
+      window.onblur = hideControls;
       async function main() {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
@@ -215,7 +326,7 @@
             delayMeter.value = 1;
           }
           if (delayMeter.value > 0) {
-            delayMeter.value -= 0.01;
+            delayMeter.value -= 0.02;
           }
           const state =
             delayThreshold.value < delayMeter.value ? "open" : "closed";
