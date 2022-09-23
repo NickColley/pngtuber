@@ -1,52 +1,55 @@
-function throttle(fn, threshhold = 250, scope) {
-  var last, deferTimer;
-  return function () {
-    var context = scope || this;
+import { throttle } from "./utils";
+const INITIAL_STATE = {
+  volumeThreshold: 0.1,
+  delayThreshold: 0.8,
+  showControls: false,
+};
+let state = {};
+let tuberState = {
+  volume: 0,
+  delay: 0,
+};
 
-    var now = +new Date(),
-      args = arguments;
-    if (last && now < last + threshhold) {
-      // hold on to it
-      clearTimeout(deferTimer);
-      deferTimer = setTimeout(function () {
-        last = now;
-        fn.apply(context, args);
-      }, threshhold);
-    } else {
-      last = now;
-      fn.apply(context, args);
-    }
-  };
-}
-const VOLUME_THRESHOLD = 0.1;
-const DELAY_THRESHOLD = 0.8;
-const setState = throttle((state) => {
-  window.localStorage.setItem("volumeThreshold", state.volumeThreshold);
-  window.localStorage.setItem("delayThreshold", state.delayThreshold);
-}, 1000);
-const resetState = () => {
-  window.localStorage.removeItem("volumeThreshold");
-  window.localStorage.removeItem("delayThreshold");
-  volumeThreshold.value = VOLUME_THRESHOLD;
-  delayThreshold.value = DELAY_THRESHOLD;
-};
+const $resetButton = document.getElementById("reset");
+const $volumeThresholdRange = document.getElementById("volumeThreshold");
+const $delayThresholdRange = document.getElementById("delayThreshold");
+const $volumeMeter = document.getElementById("volumeMeter");
+const $delayMeter = document.getElementById("delayMeter");
+const $tuber = document.getElementById("tuber");
+
 const getInitialState = () => {
-  volumeThreshold.value =
-    window.localStorage.getItem("volumeThreshold") || VOLUME_THRESHOLD;
-  delayThreshold.value =
-    window.localStorage.getItem("delayThreshold") || DELAY_THRESHOLD;
+  try {
+    const storedState = JSON.parse(window.localStorage.getItem("state"));
+    setState(storedState);
+  } catch (error) {
+    console.log("No saved state.");
+    setState(INITIAL_STATE);
+  }
 };
-const showControls = () => {
-  controls.removeAttribute("hidden");
+const setState = (newState) => {
+  state = Object.assign({}, state, newState);
+  renderUI();
+  saveState();
 };
-const hideControls = () => {
-  controls.setAttribute("hidden", true);
+const resetState = () => {
+  window.localStorage.removeItem("state");
+  setState(INITIAL_STATE);
 };
-reset.onclick = resetState;
-window.onfocus = showControls;
-window.onblur = hideControls;
-window.onmouseover = showControls;
-async function main() {
+const saveState = throttle(() => {
+  window.localStorage.setItem("state", JSON.stringify(state));
+}, 1000);
+
+const renderUI = () => {
+  if (state.showControls) {
+    controls.removeAttribute("hidden");
+  } else {
+    controls.setAttribute("hidden", true);
+  }
+  $volumeThresholdRange.value = state.volumeThreshold;
+  $delayThresholdRange.value = state.delayThreshold;
+};
+
+async function tuberLoop() {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: true,
     video: false,
@@ -65,23 +68,45 @@ async function main() {
     for (const amplitude of pcmData) {
       sumSquares += amplitude * amplitude;
     }
-    const value = Math.sqrt(sumSquares / pcmData.length);
-    if (value > volumeThreshold.value) {
-      delayMeter.value = 1;
-    } else if (delayMeter.value > 0) {
-      delayMeter.value -= 0.02;
+    const volume = Math.sqrt(sumSquares / pcmData.length);
+    let { delay } = tuberState;
+    const { volumeThreshold, delayThreshold } = state;
+    if (volume > volumeThreshold) {
+      delay = 1;
+    } else if (delay > 0) {
+      delay -= 0.02;
     }
-    const state = delayThreshold.value < delayMeter.value ? "open" : "closed";
-    volumeMeter.value = value;
-    tuber.dataset.state = state;
-    setState({
-      volumeThreshold: volumeThreshold.value,
-      delayThreshold: delayThreshold.value,
+    setTuberState({
+      state: delayThreshold < delay ? "open" : "closed",
+      volume,
+      delay,
     });
     window.requestAnimationFrame(onFrame);
   };
   window.requestAnimationFrame(onFrame);
 }
-main();
+const setTuberState = (newState) => {
+  tuberState = Object.assign({}, tuberState, newState);
+  renderTuber();
+};
+const renderTuber = () => {
+  $tuber.dataset.state = tuberState.state;
+  $volumeMeter.value = tuberState.volume;
+  $delayMeter.value = tuberState.delay;
+};
+
 getInitialState();
-hideControls();
+renderUI();
+tuberLoop();
+
+$resetButton.addEventListener("click", resetState);
+$volumeThresholdRange.addEventListener("change", () =>
+  setState({ volumeThreshold: $volumeThresholdRange.value })
+);
+$delayThresholdRange.addEventListener("change", () =>
+  setState({ delayThreshold: $delayThresholdRange.value })
+);
+
+window.addEventListener("focus", () => setState({ showControls: true }));
+window.addEventListener("blur", () => setState({ showControls: false }));
+window.addEventListener("mouseover", () => setState({ showControls: true }));
